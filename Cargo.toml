@@ -1,8 +1,34 @@
 [package]
-name = "two-d-game"
+name = "triangle"
 version = "0.1.0"
 edition = "2021"
+description = "wgpu hello triangle example"
+publish = false
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+[[bin]]
+name = "hello-triangle"
+path = "src/main.rs"
 [dependencies]
+# Our graphics API
+wgpu = "0.17"
+# Opening windows in a cross-platform way
+winit = "0.28"
+# Organized logging output, WGPU uses this for errors and info
+log = "0.4"
+env_logger = "0.10"
+# Pollster is a very simple async runtime. We can't ignore async since we want to be web-compatible.
+pollster = "0.3.0"
+#yuh
+image = "0.24.7"
+bytemuck = { version = "1.14.0", features = ["derive"] }
+
+[profile.dev.package.backtrace]
+opt-level = 3
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package.png]
+opt-level = 3
+[profile.dev.package.adler]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
