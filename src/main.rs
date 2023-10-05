@@ -367,9 +367,9 @@ let sprite_bind_group_layout =
             // WindowEvent->KeyboardInput: Keyboard input!
         Event::WindowEvent {
             // Note this deeply nested pattern match
-    // WindowEvent->KeyboardInput: Keyboard input!
+            // WindowEvent->KeyboardInput: Keyboard input!
 
-    // Note this deeply nested pattern match
+            // Note this deeply nested pattern match
             event: WindowEvent::KeyboardInput { input: key_ev, .. },
             ..
         } => {
@@ -406,9 +406,10 @@ let sprite_bind_group_layout =
             // Move one sprite to the right animation: sprites[0].to_region[0] += 1.0;
             queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
             queue.write_buffer(&buffer_sprite, 0, bytemuck::cast_slice(&sprites));
+
             // Do we need to create sprite
             if gs.waiting == false && gs.falling == false{
-                if gs.num_stacked > 7{
+                if gs.num_stacked > 7 {
                     gs = game_state::init_game_state();
                     sprites = vec![];
                     //window.request_redraw();
@@ -424,7 +425,7 @@ let sprite_bind_group_layout =
                     i += 1;
                 }
                 gs.waiting = true;
-                // Do we need to animate falling sprite
+            // Do we need to animate falling sprite
             }else if gs.falling == true{
                 let mut still_falling = false;
                 for sprite in &mut sprites {
@@ -433,7 +434,6 @@ let sprite_bind_group_layout =
                     if cur_y >= 0.0 + gs.num_stacked as f32*64.0{
                         still_falling = true;
                         sprite.to_region = [sprite.to_region[0], cur_y - 2.0, 64.0, 64.0];
-                    
                     }
                 }
                 if !still_falling{
@@ -449,7 +449,7 @@ let sprite_bind_group_layout =
                     if left_sprite > gs.left_border{
                         gs.left_border = left_sprite;
                     }
-                    if (left_sprite + gs.drop_sprite_blocks as f32*8.0) < gs.right_border{
+                    if (left_sprite + gs.drop_sprite_blocks as f32*64.0) < gs.right_border{
                         gs.right_border = left_sprite + gs.drop_sprite_blocks as f32*8.0;
                     }
                     // EDIT HERE
@@ -468,7 +468,7 @@ let sprite_bind_group_layout =
                         if sprite.to_region[1] == 512.0{
                             let cur_x = sprite.to_region[0];
                             if cur_x >= 960.0 - delta{
-                                gs.direction = true;
+                                 gs.direction = true;
                             }else if cur_x < 0.0 + delta{
                                 gs.direction = false
                             }

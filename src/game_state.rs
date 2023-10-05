@@ -1,4 +1,3 @@
-
 pub struct GameState{
     // is the game in progress? no -> title screen
     pub running: bool,
@@ -21,9 +20,6 @@ impl GameState {
 // add all necessary functions
 
 }
-
-
-
 
 pub fn init_game_state() -> GameState {
     // any necessary functions
