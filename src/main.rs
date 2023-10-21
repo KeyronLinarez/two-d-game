@@ -6,17 +6,23 @@ use winit::{
 };
 mod input;
 mod game_state;
-
+use rand::Rng;
 use game_state::GameState;
 
 pub const WINDOW_WIDTH: f32 = 1024.0;
 pub const WINDOW_HEIGHT: f32 = 768.0;
+pub const SPRITE_SIZE: f32 = 64.0;
+
+
 
 
 // In WGPU, we define an async function whose operation can be suspended and resumed.
 // This is because on web, we can't take over the main event loop and must leave it to
 // the browser.  On desktop, we'll just be running this function to completion.
 async fn run(event_loop: EventLoop<()>, window: Window) {
+    // state of game at any time
+    let mut gs = game_state::init_game_state();
+
 
     // sprite struct
     #[repr(C)]
@@ -47,16 +53,30 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     // VECTOR OF POS OF OUR SPRITES
     // MATH CORDS = 0,0 == BOTTOM LEFT
     // SCREEN CORDS = 0,0 == TOP LEFT
-    let mut sprites:Vec<GPUSprite> = vec![];
-    let mut i = 0;
-    while i < 4{
-        sprites.push(GPUSprite {
-            to_region: [384.0 + ((64*i) as f32), 512.0, 64.0, 64.0],
-            from_region: [0.25, 0.0, 0.25, 0.1],
-        });
-        i += 1;
-    }
 
+    // let mut sprites:Vec<GPUSprite> = vec![];
+    // let mut i = 0;
+    // while i < 4{
+    //     sprites.push(GPUSprite {
+    //         to_region: [384.0 + ((64*i) as f32), 512.0, SPRITE_SIZE, SPRITE_SIZE],
+    //         from_region: [0.25, 0.0, 0.25, 0.1],
+    //     });
+    //     i += 1;
+    // }
+    let mut rng = rand::thread_rng();
+    // number of max dropped per row * 12 is the maximum number of sprites needed for the game.
+    let mut sprites:Vec<_> = (0..gs.drop_sprite_blocks*12).map(|_| GPUSprite{
+        to_region: 
+            [100.0,
+            WINDOW_HEIGHT,
+            0.0, // generate width and height to be 0 so that you can adjust later, but are now invisible
+            0.0], 
+        from_region:[
+            0.25, // + rng.gen_range(0..2) as f32*0.25, // each row needs to be the same color, so all random doesn't do anything
+            0.0, // + rng.gen_range(0..10) as f32*0.1,
+            0.25,
+            0.1],
+    }).collect();
     
     // triangle
     use std::path::Path;
@@ -105,10 +125,12 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     });
     let buffer_sprite = device.create_buffer(&wgpu::BufferDescriptor{
         label: None,
-        size: (bytemuck::cast_slice::<_,u8>(&sprites).len()*10) as u64,
+        size: (bytemuck::cast_slice::<_,u8>(&sprites).len()) as u64,
         usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false
     });
+    // have sprites be a fixed length, track how far you have gone into sprites,
+    // when disappeared, make width and height = 0
 
 
 
@@ -349,9 +371,22 @@ let sprite_bind_group_layout =
     // Create a new instance of the input mod to use for the event loop
     let mut input = input::Input::default();
 
-    // state of game at any time
-    let mut gs = game_state::init_game_state();
+    // IMITATE GAME MODE SETTING IMPLEMENTATION FROM MAIN SCREEN
+    // 1: EASY (start with 5, speed is 4)
+    // 2: INTERMEDIATE (start with 4, speed is 6)
+    // 3: HARD (start with 3, speed is 10)
+    let game_mode: u8 = 2;
 
+    if game_mode == 1 {
+        gs.drop_sprite_blocks = 5;
+        gs.speed = 4;
+    }else if game_mode == 2{
+        gs.drop_sprite_blocks = 4;
+        gs.speed = 6;
+    }else{ // game_mode == 3
+        gs.drop_sprite_blocks = 3;
+        gs.speed = 10;
+    }
 
     // renders everything in the window every frame --> if we update sprite pos here, they will update
     event_loop.run(move |event, _, control_flow| {
@@ -402,28 +437,57 @@ let sprite_bind_group_layout =
 
 
         Event::MainEventsCleared => {
-            // sprite control redrawing
-            // Move one sprite to the right animation: sprites[0].to_region[0] += 1.0;
-            queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
-            queue.write_buffer(&buffer_sprite, 0, bytemuck::cast_slice(&sprites));
-
-            // Do we need to create sprite
+            
+            // Do we need to show new sprites?
             if gs.waiting == false && gs.falling == false{
-                if gs.num_stacked > 7 {
+                if gs.num_stacked > 11  || gs.drop_sprite_blocks == 0{
+                    let new_speed = gs.speed + 1;
                     gs = game_state::init_game_state();
-                    sprites = vec![];
-                    //window.request_redraw();
+                    if game_mode == 1 {
+                        gs.drop_sprite_blocks = 5;
+                        gs.speed = new_speed;
+                    }else if game_mode == 2{
+                        gs.drop_sprite_blocks = 4;
+                        gs.speed = new_speed;
+                    }else{ // game_mode == 3
+                        gs.drop_sprite_blocks = 3;
+                        gs.speed = new_speed;
+                    }
+                    sprites = (0..gs.drop_sprite_blocks*12).map(|_| GPUSprite{
+                        to_region: 
+                            [100.0,
+                            768.0,
+                            0.0, // generate width and height to be 0 so that you can adjust later, but are now invisible
+                            0.0], 
+                        from_region:[
+                            0.25, 
+                            0.0, 
+                            0.25,
+                            0.1],
+                    }).collect();
+
+                    // write next level text on the screen (display level for a second?)
                 }
-                let mut i = 0;
-                while i < 4{
-                    sprites.push(GPUSprite {
-                        // Screen cords: X     Y      W    H
-                            to_region: [384.0+((i*64) as f32), 512.0, 64.0, 64.0],
-                        // Sprite Sheet: PERCENTAGES        0.5
-                            from_region: [0.25, 0.1*gs.num_stacked as f32, 0.25, 0.1],
-                    });
+                let mut i:usize = gs.sprites_used;
+                let x_pos = rng.gen_range(0..WINDOW_WIDTH as usize-(SPRITE_SIZE as usize*gs.drop_sprite_blocks));
+                // chooe a random color on the sprite sheet for this row that will drop
+                let color_loc: (f32, f32) = (
+                    0.25 + rng.gen_range(0..2) as f32*0.25,
+                    0.0 + rng.gen_range(0..10) as f32*0.1);
+                while i < gs.drop_sprite_blocks + gs.sprites_used{
+                    sprites[i].to_region = [
+                        x_pos as f32+(((i-gs.sprites_used)*64) as f32), 
+                        WINDOW_HEIGHT - SPRITE_SIZE, 
+                        SPRITE_SIZE, 
+                        SPRITE_SIZE];
+                    sprites[i].from_region = [
+                        color_loc.0, 
+                        color_loc.1,
+                        0.25,
+                        0.1];
                     i += 1;
                 }
+                gs.sprites_used += gs.drop_sprite_blocks;
                 gs.waiting = true;
             // Do we need to animate falling sprite
             }else if gs.falling == true{
@@ -431,9 +495,9 @@ let sprite_bind_group_layout =
                 for sprite in &mut sprites {
                     let cur_y = sprite.to_region[1];
                     // if it has not yet fallen below the level it will fall to, keep falling
-                    if cur_y >= 0.0 + gs.num_stacked as f32*64.0{
+                    if cur_y >= 0.0 + gs.num_stacked as f32*SPRITE_SIZE && cur_y < WINDOW_HEIGHT{
                         still_falling = true;
-                        sprite.to_region = [sprite.to_region[0], cur_y - 2.0, 64.0, 64.0];
+                        sprite.to_region = [sprite.to_region[0], cur_y - gs.speed as f32/2.0, SPRITE_SIZE, SPRITE_SIZE];
                     }
                 }
                 if !still_falling{
@@ -443,43 +507,109 @@ let sprite_bind_group_layout =
                 // We are waiting for space to be clicked, and then acting on it
             }else{
                 if input.is_key_down(winit::event::VirtualKeyCode::Space){
-                    
-                    let left_sprite = sprites[gs.num_stacked as usize].to_region[0];
+                    let mut left_edge = WINDOW_WIDTH;
+                    let mut right_edge = 0.0;
+                    for sprite in &mut sprites {
+                        if sprite.to_region[1] == WINDOW_HEIGHT-SPRITE_SIZE{
+                            if sprite.to_region[0] < left_edge {
+                                left_edge = sprite.to_region[0];
+                            }
+                            if sprite.to_region[0] > right_edge {
+                                right_edge = sprite.to_region[0];
+                            }
+                            //println!("left: {} right: {}", left_edge, right_edge);
+                            if sprite.to_region[0] < (gs.left_border - SPRITE_SIZE/2.0){
+                                sprite.to_region = [
+                                    100.0, 
+                                    WINDOW_HEIGHT, 
+                                    0.0, 
+                                    0.0];
+                                gs.drop_sprite_blocks -= 1;
+                            }
+                            if sprite.to_region[0] > (gs.right_border + SPRITE_SIZE/2.0){
+                                sprite.to_region = [
+                                    100.0, 
+                                    WINDOW_HEIGHT, 
+                                    0.0, 
+                                    0.0];
+                                gs.drop_sprite_blocks -= 1;
+                            }
+                        }
+                    }
+                    // now update the edges of the game state for the next frame
+                    if left_edge > gs.left_border {
+                        gs.left_border = left_edge;
+                    }
+                    if right_edge < gs.right_border {
+                        gs.right_border = right_edge;
+                    }
+
+
+
+
+                    /*
+
+                    let left_sprite = sprites[gs.sprites_used-(gs.num_stacked*gs.drop_sprite_blocks)].to_region[0];
+                    let right_sprite = sprites[gs.sprites_used-gs.drop_sprite_blocks].to_region[0] + SPRITE_SIZE;
+                    //let left_sprite = sprites[(gs.num_stacked*gs.drop_sprite_blocks) as usize].to_region[0];
                     // check if sprite edge farther to the right/left than the previous one
                     if left_sprite > gs.left_border{
                         gs.left_border = left_sprite;
                     }
-                    if (left_sprite + gs.drop_sprite_blocks as f32*64.0) < gs.right_border{
-                        gs.right_border = left_sprite + gs.drop_sprite_blocks as f32*8.0;
+                    if right_sprite < gs.right_border{
+                        gs.right_border = right_sprite + SPRITE_SIZE;
                     }
                     // EDIT HERE
-                    
+                    for sprite in &mut sprites {
+                        // if the sprite is one of the four being animated
+                        if sprite.to_region[1] == WINDOW_HEIGHT - SPRITE_SIZE {
+                            // if midpoint of sprite is to the left of the left border
+                            // then move the sprite to a position that will read as inactive
+                            if sprite.to_region[0] + SPRITE_SIZE/2.0 < gs.left_border{
+                                sprite.to_region = [
+                                    100.0, 
+                                    WINDOW_HEIGHT, 
+                                    0.0, 
+                                    0.0];
+                                gs.drop_sprite_blocks -= 1;
+                            }else if sprite.to_region[0] - SPRITE_SIZE/2.0 > gs.right_border{
+                                sprite.to_region = [
+                                    100.0, 
+                                    WINDOW_HEIGHT, 
+                                    0.0, 
+                                    0.0];
+                                gs.drop_sprite_blocks -= 1;
+                            }
+                        }
+                    }
+                    */
                     gs.waiting = false;
                     gs.falling = true;
                 }else{
                     //ANIMATE BACK AND FORTH
                     // direction = true when going left
                     // consider adding active field to sprites
-                    let mut delta = 4.0;
+                    let mut delta = gs.speed as f32;
                     if gs.direction == true{
-                        delta = -4.0;
+                        delta = gs.speed as f32 * (-1.0);
                     }
                     for sprite in &mut sprites {
-                        if sprite.to_region[1] == 512.0{
+                        if sprite.to_region[1] == WINDOW_HEIGHT - SPRITE_SIZE{
                             let cur_x = sprite.to_region[0];
                             if cur_x >= 960.0 - delta{
                                  gs.direction = true;
                             }else if cur_x < 0.0 + delta{
                                 gs.direction = false
                             }
-                            sprite.to_region = [cur_x + delta, 512.0, 64.0, 64.0];
+                            sprite.to_region = [cur_x + delta, WINDOW_HEIGHT - SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE];
                         }                    
                     }
                 }
             }        
             // Remember this from before?
             //input.next_frame();
-        
+            queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
+            queue.write_buffer(&buffer_sprite, 0, bytemuck::cast_slice(&sprites));
 
             let frame = surface
                 .get_current_texture()

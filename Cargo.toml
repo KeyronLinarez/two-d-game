@@ -21,6 +21,7 @@ pollster = "0.3.0"
 #yuh
 image = "0.24.7"
 bytemuck = { version = "1.14.0", features = ["derive"] }
+rand = "0.8.5"
 
 [profile.dev.package.backtrace]
 opt-level = 3
