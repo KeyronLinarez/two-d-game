@@ -1,4 +1,6 @@
 pub struct GameState{
+    // Screen number: 0 = Title, 1 = Block Game, 2 = Black GO, 3 = Space Game, 4 = Space GO
+    pub screen: usize,
     // level
     pub level: usize,
     // is the game in progress? no -> title screen
@@ -33,9 +35,10 @@ pub fn init_game_state() -> GameState {
     // any necessary functions
 
     GameState {
+        // Screen number: 0 = Title, 1 = Block Game, 2 = Block Setup, 3 = Black GO, 4 = Space Game, 5 = Space Setup, 6 = Space GO
+        screen : 0,
         //level
         level : 1,
-        
         // is the game in progress? no -> title screen
         running : true,
         // is there a block bouncing side to side at top
@@ -53,7 +56,7 @@ pub fn init_game_state() -> GameState {
         // where is the right border for where blocks can stack
         right_border : 1080.0,
         // how many sprite blocks wide do we drop next
-        drop_sprite_blocks : 4,
+        drop_sprite_blocks : 5,
         // speed of blocks moving
         speed: 4,
     }
