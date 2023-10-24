@@ -65,9 +65,12 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     // }
     let mut rng = rand::thread_rng();
     // number of max dropped per row * 12 is the maximum number of sprites needed for the game.
+    // MAKE BUFFER BIGGER FOR SPACE GAME
     let mut sprites:Vec<_> = (0..gs.drop_sprite_blocks*12).map(|_| GPUSprite{
         to_region: 
-            [100.0,
+        // Changed this break game?
+            //[100.0,
+            [WINDOW_WIDTH/2.0,
             WINDOW_HEIGHT,
             0.0, // generate width and height to be 0 so that you can adjust later, but are now invisible
             0.0], 
@@ -448,9 +451,16 @@ let sprite_bind_group_layout =
                 if input.is_key_down(winit::event::VirtualKeyCode::Key1){
                     // actually want to go to screen 2 once setup screen has been created
                     gs.screen = 1;
+
+
                 }else if input.is_key_down(winit::event::VirtualKeyCode::Key2){
+
                     gs.screen = 5;
-                }else{
+                    //let cur_x = WINDOW_WIDTH/2.0;
+
+                    }else{
+
+                    // FIRST SCREEN - TITLE SCREEN
                     sprites[0].to_region = [
                         500.0, 
                         WINDOW_HEIGHT - SPRITE_SIZE, 
@@ -462,7 +472,62 @@ let sprite_bind_group_layout =
                         0.25,
                         0.1];
                 }
-            }else if gs.screen == 1 {
+            } else if gs.screen == 5 {
+
+                        println!("GAME 2!!!!");
+                        // space game
+                        gs = game_state::init_game_state();
+                        gs.running = true;
+                        gs.screen = 5;
+
+                        // white box showing loaded into game
+                        sprites[0].to_region = [
+                            500.0, 
+                            WINDOW_HEIGHT - SPRITE_SIZE, 
+                            SPRITE_SIZE, 
+                            SPRITE_SIZE];
+                        sprites[0].from_region = [
+                            0.75, 
+                            0.0,
+                            0.25,
+                            0.1];
+
+                        // ship sprite VVV
+                        sprites[1].to_region = [
+                            // how does this work? What is this initially?
+                            sprites[1].to_region[0], 
+                            0.0, 
+                            SPRITE_SIZE, 
+                            SPRITE_SIZE];
+                        sprites[1].from_region = [
+                            0.75, 
+                            0.9,
+                            0.25,
+                            0.1];
+                        println!("{}", sprites[1].to_region[0]);
+                        //current x of ship
+                        let cur_x: f32 = sprites[1].to_region[0];
+
+                        // checks left and right movement
+                        if input.is_key_down(winit::event::VirtualKeyCode::Left){
+                            println!("Left");
+                            sprites[1].to_region = [cur_x-6.0, 0.0, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", cur_x)
+                        }
+                        else if input.is_key_down(winit::event::VirtualKeyCode::Right){
+                            println!("Right");
+                            sprites[1].to_region = [cur_x+6.0, 0.0, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", cur_x)
+                        }
+                        else {
+                            println!("{}", gs.running);
+                        }
+
+                        
+
+
+            }
+            else if gs.screen == 1 {
                 // Do we need to show new sprites?
                 if gs.waiting == false && gs.falling == false{
                     // game restart
@@ -497,6 +562,7 @@ let sprite_bind_group_layout =
                         // write next level text on the screen (display level for a second?)
                     }
                     let mut i:usize = gs.sprites_used;
+                    // XPOS OF LEFTMOST SPRITE
                     let x_pos = rng.gen_range(0..WINDOW_WIDTH as usize-(SPRITE_SIZE as usize*gs.drop_sprite_blocks));
                     // chooe a random color on the sprite sheet for this row that will drop
                     let color_loc: (f32, f32) = (
@@ -633,8 +699,12 @@ let sprite_bind_group_layout =
                             }                    
                         }
                     }
+
+                    // SCREEN == 5 -> SPACE GAME LOOP
                 }
-            }        
+            }    
+            // THIS SHIT IS WORKING
+            //println!("SHOULD PRINT EVERY FRAME~~~~~~~~!!!!!");
             // Remember this from before?
             //input.next_frame();
             queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
