@@ -509,7 +509,7 @@ let sprite_bind_group_layout =
                         // Saving x pos
                         //current x of ship
                         let cur_x: f32 = sprites[1].to_region[0];
-                        let cur_y: f32 = 0.0;
+                        let mut cur_y: f32 = 0.0;
                         let bullet_speed: f32 = 5.0;
 
                         if gs.waiting{
@@ -548,8 +548,21 @@ let sprite_bind_group_layout =
                             println!("SHOOTING");
                             // USING WAITING TO CHECK IF BULLET SHOT
                             gs.waiting = true;
-                            sprites[2].to_region = [cur_x, cur_y+bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", cur_y)
+                            while(gs.waiting && cur_y < WINDOW_HEIGHT){
+                            //not actually updating sprite position.
+                            cur_y = cur_y + bullet_speed;
+                            sprites[2].to_region = [cur_x, cur_y, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", cur_y);
+                            
+                            let targetx: f32 = sprites[0].to_region[0];
+                            let targety: f32 = sprites[0].to_region[1];
+                            if (cur_x == targetx) & (cur_y == targety){
+                             gs.waiting= false; 
+                            
+                            }
+                            
+                        
+                        }
                         }
 
                         else {
