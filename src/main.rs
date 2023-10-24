@@ -548,17 +548,33 @@ let sprite_bind_group_layout =
                             println!("SHOOTING");
                             // USING WAITING TO CHECK IF BULLET SHOT
                             gs.waiting = true;
-                            while(gs.waiting && cur_y < WINDOW_HEIGHT){
+                             while(gs.waiting){
                             //not actually updating sprite position.
                             cur_y = cur_y + bullet_speed;
                             sprites[2].to_region = [cur_x, cur_y, SPRITE_SIZE, SPRITE_SIZE];
                             println!("{}", cur_y);
                             
                             let targetx: f32 = sprites[0].to_region[0];
-                            let targety: f32 = sprites[0].to_region[1];
-                            if (cur_x == targetx) & (cur_y == targety){
+                            if ((cur_x == targetx) & (cur_y == WINDOW_HEIGHT-SPRITE_SIZE))  {
                              gs.waiting= false; 
-                            
+                               
+                                sprites[2].to_region = [cur_x, cur_y, 0.0, 0.0];
+                                cur_y = 0.0;
+                                sprites[0].to_region = [
+                                    500.0, 
+                                    WINDOW_HEIGHT - SPRITE_SIZE, 
+                                    0.0, 0.0];
+                                    let x: f32 = rng.gen_range((0.0 + SPRITE_SIZE) .. (WINDOW_WIDTH - SPRITE_SIZE) );
+                                    sprites[0].to_region = [
+                            x, 
+                            WINDOW_HEIGHT - SPRITE_SIZE, 
+                            SPRITE_SIZE, 
+                            SPRITE_SIZE];
+                            }
+                            if cur_y >= WINDOW_HEIGHT  {
+                                gs.waiting= false; 
+                                   sprites[2].to_region = [cur_x, cur_y, 0.0, 0.0];
+                                   cur_y = 0.0;
                             }
                             
                         
