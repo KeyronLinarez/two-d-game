@@ -456,6 +456,7 @@ let sprite_bind_group_layout =
                 }else if input.is_key_down(winit::event::VirtualKeyCode::Key2){
 
                     gs.screen = 5;
+
                     //let cur_x = WINDOW_WIDTH/2.0;
 
                     }else{
@@ -480,7 +481,7 @@ let sprite_bind_group_layout =
                         gs.running = true;
                         gs.screen = 5;
 
-                        // white box showing loaded into game
+                        // target sprite
                         sprites[0].to_region = [
                             500.0, 
                             WINDOW_HEIGHT - SPRITE_SIZE, 
@@ -504,9 +505,32 @@ let sprite_bind_group_layout =
                             0.9,
                             0.25,
                             0.1];
-                        println!("{}", sprites[1].to_region[0]);
+
+                        // Saving x pos
                         //current x of ship
                         let cur_x: f32 = sprites[1].to_region[0];
+                        let cur_y: f32 = 0.0;
+                        let bullet_speed: f32 = 5.0;
+
+                        if gs.waiting{
+                            println!("THIS SHOULD BE PRINTING EVERY FRAME");
+                            sprites[2].to_region = [cur_x, cur_y+bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
+                        }
+
+                        else{
+                        // Bullet SPrite - initially invisible
+                        sprites[2].to_region = [
+                            cur_x, 
+                            cur_y, 
+                            0.0, 
+                            0.0];
+                        sprites[2].from_region = [
+                            0.5, 
+                            0.9,
+                            0.25,
+                            0.1];
+                        }
+
 
                         // checks left and right movement
                         if input.is_key_down(winit::event::VirtualKeyCode::Left){
@@ -519,13 +543,24 @@ let sprite_bind_group_layout =
                             sprites[1].to_region = [cur_x+6.0, 0.0, SPRITE_SIZE, SPRITE_SIZE];
                             println!("{}", cur_x)
                         }
+
+                        else if input.is_key_down(winit::event::VirtualKeyCode::Space){
+                            println!("SHOOTING");
+                            // USING WAITING TO CHECK IF BULLET SHOT
+                            gs.waiting = true;
+                            sprites[2].to_region = [cur_x, cur_y+bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", cur_y)
+                        }
+
                         else {
-                            println!("{}", gs.running);
+                            //println!("{}", gs.running);
+
+                            println!("{}", gs.waiting);
                         }
 
                         
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
             }
             else if gs.screen == 1 {
                 // Do we need to show new sprites?
