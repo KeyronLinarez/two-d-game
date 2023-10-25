@@ -455,10 +455,18 @@ let sprite_bind_group_layout =
 
                 }else if input.is_key_down(winit::event::VirtualKeyCode::Key2){
 
+                    gs = game_state::init_game_state();
                     gs.screen = 5;
+                    gs.start = true;
+                    //current x,y of ship
+                    let bullet_speed: f32 = 5.0;
+                    let cur_x: f32 = sprites[1].to_region[0];
+                    let mut cur_y: f32 = sprites[1].to_region[1];
 
-                    //let cur_x = WINDOW_WIDTH/2.0;
 
+                    
+
+                    
                     }else{
 
                     // FIRST SCREEN - TITLE SCREEN
@@ -473,14 +481,14 @@ let sprite_bind_group_layout =
                         0.25,
                         0.1];
                 }
-            } else if gs.screen == 5 {
 
-                        println!("GAME 2!!!!");
+
+            } else if gs.screen == 5 {
                         // space game
-                        gs = game_state::init_game_state();
-                        gs.running = true;
+                        println!("GAME 2!!!!");
                         gs.screen = 5;
 
+                        if gs.start{
                         // target sprite
                         sprites[0].to_region = [
                             500.0, 
@@ -495,9 +503,8 @@ let sprite_bind_group_layout =
 
                         // ship sprite VVV
                         sprites[1].to_region = [
-                            // how does this work? What is this initially?
-                            sprites[1].to_region[0], 
-                            0.0, 
+                            gs.cur_x, 
+                            gs.cur_y, 
                             SPRITE_SIZE, 
                             SPRITE_SIZE];
                         sprites[1].from_region = [
@@ -506,22 +513,11 @@ let sprite_bind_group_layout =
                             0.25,
                             0.1];
 
-                        // Saving x pos
-                        //current x of ship
-                        let cur_x: f32 = sprites[1].to_region[0];
-                        let mut cur_y: f32 = 0.0;
-                        let bullet_speed: f32 = 5.0;
-
-                        if gs.waiting{
-                            println!("THIS SHOULD BE PRINTING EVERY FRAME");
-                            sprites[2].to_region = [cur_x, cur_y+bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
-                        }
-
-                        else{
                         // Bullet SPrite - initially invisible
                         sprites[2].to_region = [
-                            cur_x, 
-                            cur_y, 
+                            sprites[1].to_region[0], 
+                            sprites[1].to_region[1], 
+                            // initially invisible
                             0.0, 
                             0.0];
                         sprites[2].from_region = [
@@ -529,37 +525,50 @@ let sprite_bind_group_layout =
                             0.9,
                             0.25,
                             0.1];
-                        }
-
 
                         // checks left and right movement
                         if input.is_key_down(winit::event::VirtualKeyCode::Left){
                             println!("Left");
-                            sprites[1].to_region = [cur_x-6.0, 0.0, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", cur_x)
+                            gs.cur_x -= 6.0;
+                            sprites[1].to_region = [gs.cur_x, 0.0, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", gs.cur_x)
                         }
+
                         else if input.is_key_down(winit::event::VirtualKeyCode::Right){
                             println!("Right");
-                            sprites[1].to_region = [cur_x+6.0, 0.0, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", cur_x)
+                            gs.cur_x += 6.0;
+                            sprites[1].to_region = [gs.cur_x, 0.0, SPRITE_SIZE, SPRITE_SIZE];
+                            println!("{}", gs.cur_x)
                         }
 
                         else if input.is_key_down(winit::event::VirtualKeyCode::Space){
                             println!("SHOOTING");
                             // USING WAITING TO CHECK IF BULLET SHOT
-                            gs.waiting = true;
-                             while(gs.waiting){
-                            //not actually updating sprite position.
-                            cur_y = cur_y + bullet_speed;
-                            sprites[2].to_region = [cur_x, cur_y, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", cur_y);
-                            
-                            let targetx: f32 = sprites[0].to_region[0];
-                            if ((cur_x == targetx) & (cur_y == WINDOW_HEIGHT-SPRITE_SIZE))  {
-                             gs.waiting= false; 
+                            gs.bullet_moving = true;
+                            gs.bullet_x = gs.cur_x;
+                            gs.bullet_y = gs.cur_y;
+                            sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+
+
+                        }
+
+                        if gs.bullet_moving{
+
+                            println!("SHOOTING");
+                            // USING WAITING TO CHECK IF BULLET SHOT
+                            if gs.bullet_y < WINDOW_HEIGHT {
+                            //cur_y = cur_y + bullet_speed;
+                            gs.bullet_y += gs.bullet_speed;
+                            println!("{}", gs.bullet_x);
+                            println!("{}", gs.bullet_y);
+                            sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                            let targetx: f32 = sprites[0].to_region[0]; 
+                            println!("{}", targetx);
+                            if ((gs.bullet_x >= targetx-60.0 || gs.bullet_x + SPRITE_SIZE > targetx) &(gs.bullet_x <= targetx + SPRITE_SIZE)  & (gs.bullet_y == WINDOW_HEIGHT-SPRITE_SIZE))  {
+                             gs.bullet_moving= false; 
                                
-                                sprites[2].to_region = [cur_x, cur_y, 0.0, 0.0];
-                                cur_y = 0.0;
+                                sprites[2].to_region = [gs.bullet_x, gs.bullet_y, 0.0, 0.0];
+                                gs.bullet_y = 0.0;
                                 sprites[0].to_region = [
                                     500.0, 
                                     WINDOW_HEIGHT - SPRITE_SIZE, 
@@ -571,21 +580,33 @@ let sprite_bind_group_layout =
                             SPRITE_SIZE, 
                             SPRITE_SIZE];
                             }
-                            if cur_y >= WINDOW_HEIGHT  {
-                                gs.waiting= false; 
-                                   sprites[2].to_region = [cur_x, cur_y, 0.0, 0.0];
-                                   cur_y = 0.0;
+    
                             }
-                            
-                        
-                        }
+                            else{
+                                gs.bullet_moving = false;
+                            }
                         }
 
-                        else {
-                            //println!("{}", gs.running);
 
-                            println!("{}", gs.waiting);
                         }
+                    
+
+                        // else{
+                        // // Bullet SPrite - initially invisible
+                        // sprites[2].to_region = [
+                        //     cur_x, 
+                        //     cur_y, 
+                        //     0.0, 
+                        //     0.0];
+                        // sprites[2].from_region = [
+                        //     0.5, 
+                        //     0.9,
+                        //     0.25,
+                        //     0.1];
+                        // }
+
+
+
 
                         
 
