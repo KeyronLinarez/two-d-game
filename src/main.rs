@@ -36,9 +36,17 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     // sprite struct
     #[repr(C)]
     #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
+    #[derive(Debug)]
     struct GPUSprite {
         to_region: [f32;4],
         from_region: [f32;4],
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
+    struct bullet {
+        x: f32,
+        y: f32,
     }
 
     // camera struct
@@ -75,7 +83,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut rng = rand::thread_rng();
     // number of max dropped per row * 12 is the maximum number of sprites needed for the game.
     // MAKE BUFFER BIGGER FOR SPACE GAME
-    let mut sprites:Vec<_> = (0..gs.drop_sprite_blocks*12).map(|_| GPUSprite{
+    let mut sprites:Vec<_> = (0..gs.drop_sprite_blocks*36).map(|_| GPUSprite{
         to_region: 
             [WINDOW_WIDTH/2.0,
             WINDOW_HEIGHT,
@@ -197,6 +205,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         // ADD DATA INTO THE BUFFERS!!!!
         queue.write_buffer(&buffer_camera, 0, bytemuck::bytes_of(&camera));
         queue.write_buffer(&buffer_sprite, 0, bytemuck::cast_slice(&sprites));
+        //queue.write_buffer(&buffer_sprite, 0, bytemuck::cast_slice(&sprites));
+
 
     // The swapchain is how we obtain images from the surface we're drawing onto.
     // This is so we can draw onto one image while a different one is being presentedto the user on-screen.
@@ -405,6 +415,7 @@ let sprite_bind_group_layout =
     // 3: HARD (start with 3, speed is 10)
     let mut game_mode: u8 = 1;
 
+
     if game_mode == 1 {
         gs.drop_sprite_blocks = 5;
         gs.speed = 4;
@@ -522,19 +533,23 @@ let sprite_bind_group_layout =
 
 
             } else if gs.screen == 5 {
+                        let sprites_num = sprites.len();
+                        //println!("Number of elements in the Vec: {}", sprites_num);
                         // space game
-                        buffer.set_text(&mut font_system, "", Attrs::new().family(Family::Serif), Shaping::Advanced);
+                        let text_1 = "Target practice! Hit the target for points! \nYour score: ";
+                        let text = text_1.to_owned() + &gs.score.to_string();
+                        buffer.set_text(&mut font_system, &text, Attrs::new().family(Family::Serif), Shaping::Advanced);
 
                         gs.screen = 5;
-                        let  mut hits: f32 = 0.0;
+                        let mut hits: f32 = 0.0;
 
 
                         if gs.start{
                         // target sprite
                         let mut hit:bool = false;
-                       
+                        let mut hit2:bool = false;
+                        let mut hit3:bool = false;
 
-                        
                         sprites[0].to_region = [
                             gs.target_x, 
                             gs.target_y, 
@@ -558,7 +573,9 @@ let sprite_bind_group_layout =
                             0.25,
                             0.1];
 
-                        // Bullet SPrite - initially invisible
+                        // Bullet Sprites - initially invisible
+
+                        // bullet 1
                         sprites[2].to_region = [
                             sprites[1].to_region[0], 
                             sprites[1].to_region[1], 
@@ -571,60 +588,290 @@ let sprite_bind_group_layout =
                             0.25,
                             0.1];
 
+                        // bullet 2
+                        sprites[3].to_region = [
+                            sprites[1].to_region[0], 
+                            sprites[1].to_region[1], 
+                            // initially invisible
+                            0.0, 
+                            0.0];
+                        sprites[3].from_region = [
+                            0.5, 
+                            0.9,
+                            0.25,
+                            0.1];
+
+                        // bullet 2
+                        sprites[4].to_region = [
+                            sprites[1].to_region[0], 
+                            sprites[1].to_region[1], 
+                            // initially invisible
+                            0.0, 
+                            0.0];
+                        sprites[4].from_region = [
+                            0.5, 
+                            0.9,
+                            0.25,
+                            0.1];
+
+                        //let mut bullet_sprites: Vec<GPUSprite> = vec![];
+
                         // checks left and right movement
                         if input.is_key_down(winit::event::VirtualKeyCode::Left){
                             println!("Left");
                             gs.cur_x -= 6.0;
                             sprites[1].to_region = [gs.cur_x, 0.0, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", gs.cur_x)
+                            println!("{}", gs.cur_x);
+
+                            if input.is_key_down(winit::event::VirtualKeyCode::Space){
+                                println!("Space");
+                                gs.bullet_count +=1;
+      
+                                // //new shit
+                                // let mut new_sprite = GPUSprite { to_region:
+                                //     [gs.cur_x, 
+                                //     gs.cur_y, 
+                                //     // initially invisible
+                                //     SPRITE_SIZE, 
+                                //     SPRITE_SIZE],
+                                // from_region: [
+                                //     0.5, 
+                                //     0.9,
+                                //     0.25,
+                                //     0.1]
+                                // };
+                                // let mut splice_num = gs.bullet_count + 3;
+                                // sprites[splice_num] = new_sprite;
+                                // println!("{:#?}", new_sprite);
+                                // gs.bullet_moving = true;
+    
+    
+    
+                                // // working VVVV
+                                println!("{}", gs.bullet_count.to_string());
+      
+                                // check if 0 bullets on screen
+                                println!("BRUHH");
+                                gs.bullet_moving = true;
+                                gs.bullet_x = gs.cur_x;
+                                gs.bullet_y = gs.cur_y;
+                                sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE/4.0, SPRITE_SIZE/4.0];
+
+
+                                if gs.bullet_count == 2{
+                                    gs.bullet2_x = gs.cur_x;
+                                    gs.bullet2_y = gs.cur_y;
+                                    sprites[3].to_region = [gs.bullet2_x, gs.bullet2_y, SPRITE_SIZE/4.0, SPRITE_SIZE/4.0];
+                                }  
+
+                                if gs.bullet_count == 3{
+                                    gs.bullet3_x = gs.cur_x;
+                                    gs.bullet3_y = gs.cur_y;
+                                    sprites[4].to_region = [gs.bullet3_x, gs.bullet3_y, SPRITE_SIZE/4.0, SPRITE_SIZE/4.0];
+                                }             
+
+
+                                }
+
+                            // allows left and right movement simultaneously
+                            // if input.is_key_down(winit::event::VirtualKeyCode::Space){
+                            //     gs.bullet_moving = true;
+                            //     gs.bullet_x = gs.cur_x;
+                            //     gs.bullet_y = gs.cur_y;
+                            //     sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                            // }
                         }
 
                         else if input.is_key_down(winit::event::VirtualKeyCode::Right){
                             println!("Right");
                             gs.cur_x += 6.0;
                             sprites[1].to_region = [gs.cur_x, 0.0, SPRITE_SIZE, SPRITE_SIZE];
-                            println!("{}", gs.cur_x)
-                        }
+                            println!("{}", gs.cur_x);
 
-                        else if input.is_key_down(winit::event::VirtualKeyCode::Space){
-                           
-                            // USING WAITING TO CHECK IF BULLET SHOT
-                            gs.bullet_moving = true;
-                            gs.bullet_x = gs.cur_x;
-                            gs.bullet_y = gs.cur_y;
-                            sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                            if input.is_key_down(winit::event::VirtualKeyCode::Space){
+                                println!("Space");
+                                gs.bullet_count +=1;
+      
+                                // //new shit
+                                // let mut new_sprite = GPUSprite { to_region:
+                                //     [gs.cur_x, 
+                                //     gs.cur_y, 
+                                //     // initially invisible
+                                //     SPRITE_SIZE, 
+                                //     SPRITE_SIZE],
+                                // from_region: [
+                                //     0.5, 
+                                //     0.9,
+                                //     0.25,
+                                //     0.1]
+                                // };
+
+                                // let mut splice_num = gs.bullet_count + 3;
+                                // gs.bullet_index = splice_num;
+                                // sprites[splice_num] = new_sprite;
+                                // println!("{:#?}", new_sprite);
+                                // gs.bullet_moving = true;
+    
+    
+    
+                                // // working VVVV
+                                println!("{}", gs.bullet_count.to_string());
+      
+                                // check if 0 bullets on screen
+                                println!("BRUHH");
+                                gs.bullet_moving = true;
+                                gs.bullet_x = gs.cur_x;
+                                gs.bullet_y = gs.cur_y;
+                                sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                                // increment bullet counter
+                                gs.bullet_count+=1;
 
 
-                        }
+                                if gs.bullet_count == 2{
+                                    gs.bullet2_x = gs.cur_x;
+                                    gs.bullet2_y = gs.cur_y;
+                                    sprites[3].to_region = [gs.bullet2_x, gs.bullet2_y, SPRITE_SIZE, SPRITE_SIZE];
+                                }  
+
+                                if gs.bullet_count == 3{
+                                    gs.bullet3_x = gs.cur_x;
+                                    gs.bullet3_y = gs.cur_y;
+                                    sprites[4].to_region = [gs.bullet3_x, gs.bullet3_y, SPRITE_SIZE, SPRITE_SIZE];
+                                }             
+
+                                
+                                }
+ 
+                        } else if input.is_key_down(winit::event::VirtualKeyCode::Space){
+                                println!("Space");
+                                gs.bullet_count +=1;
+      
+                                // //new shit
+                                // let mut new_sprite = GPUSprite { to_region:
+                                //     [gs.cur_x, 
+                                //     gs.cur_y, 
+                                //     // initially invisible
+                                //     SPRITE_SIZE, 
+                                //     SPRITE_SIZE],
+                                // from_region: [
+                                //     0.5, 
+                                //     0.9,
+                                //     0.25,
+                                //     0.1]
+                                // };
+
+                                // let mut splice_num = gs.bullet_count + 3;
+                                // gs.bullet_index = splice_num;
+                                // sprites[splice_num] = new_sprite;
+                                // println!("{:#?}", new_sprite);
+                                // gs.bullet_moving = true;
+    
+    
+    
+                                // // working VVVV
+                                println!("{}", gs.bullet_count.to_string());
+      
+                                // check if 0 bullets on screen
+                                println!("BRUHH");
+                                gs.bullet_moving = true;
+                                gs.bullet_x = gs.cur_x;
+                                gs.bullet_y = gs.cur_y;
+                                sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                                // increment bullet counter
+                                gs.bullet_count+=1;
+
+
+                                if gs.bullet_count == 2{
+                                    gs.bullet2_x = gs.cur_x;
+                                    gs.bullet2_y = gs.cur_y;
+                                    sprites[3].to_region = [gs.bullet2_x, gs.bullet2_y, SPRITE_SIZE, SPRITE_SIZE];
+                                }  
+
+                                if gs.bullet_count == 3{
+                                    gs.bullet3_x = gs.cur_x;
+                                    gs.bullet3_y = gs.cur_y;
+                                    sprites[4].to_region = [gs.bullet3_x, gs.bullet3_y, SPRITE_SIZE, SPRITE_SIZE];
+                                }             
+
+                                
+                                }
                         
+       
+                        // any bullets shot GOOD AND WORKING VVVVVV
                         if gs.bullet_moving{
+                            // for sprite in &mut sprites {
+                            //     // Perform your operation here - add y vel
+                            //     let mut graivty = sprites.to_region[1] + gs.bullet_speed;
+                            //     println!(
+                            //     "{}", graivty
+                            //     );
+                            //      // render sprite
+                            //     sprites[gs.bullet_index].to_region = [sprite.to_region[0], graivty, SPRITE_SIZE, SPRITE_SIZE];
+                            // }
 
-                            
+                            // working VVVVVVVVVVVVVVVVVVVVVVVVV
+
                             // USING WAITING TO CHECK IF BULLET SHOT
                             if gs.bullet_y < WINDOW_HEIGHT {
-                            //cur_y = cur_y + bullet_speed;
-                            gs.bullet_y += gs.bullet_speed;
-                          
-                            sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
-                            let targetx: f32 = sprites[0].to_region[0]; 
-                            
-                            if (((gs.bullet_x >= targetx-SPRITE_SIZE)&(gs.bullet_x <= targetx + SPRITE_SIZE))  & (gs.bullet_y >= WINDOW_HEIGHT-SPRITE_SIZE))  {
-                           
-                               
-                                hit= true;
-                                    
-                            }
-                           
-    
-                            }
-                            else{
-                                gs.bullet_moving = false;
-                                hit = false;
                                 
+                                println!("RUH ROH");
+                                //cur_y = cur_y + bullet_speed;
+                                gs.bullet_y += gs.bullet_speed;
+                                //sprites[gs.bullet_index].to_region = [sprites[gs.bullet_index].to_region[0], sprites[gs.bullet_index].to_region[1] + gs.bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
+                            
+                                sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                                let targetx: f32 = sprites[0].to_region[0]; 
+                                
+                                if (((gs.bullet_x >= targetx-SPRITE_SIZE)&(gs.bullet_x <= targetx + SPRITE_SIZE))  & (gs.bullet_y >= WINDOW_HEIGHT-SPRITE_SIZE-50.0))  { 
+                                    hit = true;
+                                        
+                                }
+                        
                             }
+                            //////// fuckking around now VVVV
+                            if gs.bullet2_y < WINDOW_HEIGHT {
+                                
+                                println!("RUH ROH");
+                                //cur_y = cur_y + bullet_speed;
+                                gs.bullet2_y += gs.bullet_speed;
+                                //sprites[gs.bullet_index].to_region = [sprites[gs.bullet_index].to_region[0], sprites[gs.bullet_index].to_region[1] + gs.bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
+                            
+                                sprites[3].to_region = [gs.bullet2_x, gs.bullet2_y, SPRITE_SIZE, SPRITE_SIZE];
+                                let targetx: f32 = sprites[0].to_region[0]; 
+                                
+                                if (((gs.bullet2_x >= targetx-SPRITE_SIZE)&(gs.bullet2_x <= targetx + SPRITE_SIZE))  & (gs.bullet2_y >= WINDOW_HEIGHT-SPRITE_SIZE-50.0))  { 
+                                    hit2 = true;
+                                        
+                                }
+                            }   
+
+                            if gs.bullet3_y < WINDOW_HEIGHT {
+                                
+                                println!("RUH ROH");
+                                //cur_y = cur_y + bullet_speed;
+                                gs.bullet3_y += gs.bullet_speed;
+                                //sprites[gs.bullet_index].to_region = [sprites[gs.bullet_index].to_region[0], sprites[gs.bullet_index].to_region[1] + gs.bullet_speed, SPRITE_SIZE, SPRITE_SIZE];
+                            
+                                sprites[4].to_region = [gs.bullet3_x, gs.bullet3_y, SPRITE_SIZE, SPRITE_SIZE];
+                                let targetx: f32 = sprites[0].to_region[0]; 
+                                
+                                if (((gs.bullet3_x >= targetx-SPRITE_SIZE)&(gs.bullet3_x <= targetx + SPRITE_SIZE))  & (gs.bullet3_y >= WINDOW_HEIGHT-SPRITE_SIZE-50.0))  { 
+                                    hit3 = true;
+                                        
+                                }
+                            
+                            }
+
+                            // }
                             
                             if (hit){
-                                hits = hits + 1.0;
+                                gs.score += 1;
+                                gs.bullet_count -= 1;
+                                // this will reset the sprite after hitting the target
+                                gs.bullet_y = WINDOW_HEIGHT;
+                                gs.bullet_moving = false;
+
+
                                 println!("Hit{}" , hits);
                                 
                                 let  x: f32 = rng.gen_range((0.0 ) .. 10.0 );
@@ -638,30 +885,59 @@ let sprite_bind_group_layout =
                                         } 
                                         sprites[0].to_region = [gs.target_x, WINDOW_HEIGHT-SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE]; 
                                     
+                                    }     
+
+                            if (hit2){
+                                gs.score += 1;
+                                gs.bullet_count -= 1;
+                                // this will reset the sprite after hitting the target
+                                gs.bullet2_y = WINDOW_HEIGHT;
+                                gs.bullet_moving = false;
+
+
+                                println!("Hit{}" , hits);
+                                
+                                let  x: f32 = rng.gen_range((0.0 ) .. 10.0 );
+                                        let sign: f32 = rng.gen_range(0.0.. 3.0);
+                                        gs.target_x = sprites[0].to_region[0];
+                                        if ((sign <1.0) & (gs.target_x < WINDOW_WIDTH - 10.0)){
+                                            gs.target_x += x;
+                                            
+                                        }  else if((sign > 1.0 )& (gs.target_x > 10.0)) {
+                                           gs.target_x -= x;
+                                        } 
+                                        sprites[0].to_region = [gs.target_x, WINDOW_HEIGHT-SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE]; 
                                     
                                     } 
+                            if (hit3){
+                                gs.score += 1;
+                                gs.bullet_count -= 1;
+                                // this will reset the sprite after hitting the target
+                                gs.bullet3_y = WINDOW_HEIGHT;
+                                gs.bullet_moving = false;
+
+
+                                println!("Hit{}" , hits);
+                                
+                                let  x: f32 = rng.gen_range((0.0 ) .. 10.0 );
+                                        let sign: f32 = rng.gen_range(0.0.. 3.0);
+                                        gs.target_x = sprites[0].to_region[0];
+                                        if ((sign <1.0) & (gs.target_x < WINDOW_WIDTH - 10.0)){
+                                            gs.target_x += x;
+                                            
+                                        }  else if((sign > 1.0 )& (gs.target_x > 10.0)) {
+                                           gs.target_x -= x;
+                                        } 
+                                        sprites[0].to_region = [gs.target_x, WINDOW_HEIGHT-SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE]; 
                                     
+                                    } 
+   
                                     
                         }
 
 
                         }
                     
-
-                        // else{
-                        // // Bullet SPrite - initially invisible
-                        // sprites[2].to_region = [
-                        //     cur_x, 
-                        //     cur_y, 
-                        //     0.0, 
-                        //     0.0];
-                        // sprites[2].from_region = [
-                        //     0.5, 
-                        //     0.9,
-                        //     0.25,
-                        //     0.1];
-                        // }
-
 
 
 
@@ -922,21 +1198,21 @@ let sprite_bind_group_layout =
 
                 }
 
-                if gs.bullet_moving{
+                // if gs.bullet_moving{
 
-                    println!("SHOOTING");
-                    // USING WAITING TO CHECK IF BULLET SHOT
-                    if gs.bullet_y < WINDOW_HEIGHT {
-                    //cur_y = cur_y + bullet_speed;
-                    gs.bullet_y += gs.bullet_speed;
-                    println!("{}", gs.cur_y);
-                    sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+                //     println!("SHOOTING");
+                //     // USING WAITING TO CHECK IF BULLET SHOT
+                //     if gs.bullet_y < WINDOW_HEIGHT {
+                //     //cur_y = cur_y + bullet_speed;
+                //     gs.bullet_y += gs.bullet_speed;
+                //     println!("{}", gs.cur_y);
+                //     sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
 
-                    }
-                    else{
-                        gs.bullet_moving = false;
-                    }
-                }
+                //     }
+                //     else{
+                //         gs.bullet_moving = false;
+                //     }
+                // }
 
 
                 }

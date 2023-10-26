@@ -30,18 +30,40 @@ pub struct GameState{
     pub start:bool,
     // checks bullet state
     pub bullet_moving:bool,
+    // checks if 3 bullets on screen
     // y pos of bullet
     pub bullet_y:f32,
     // x pos of bullet
     pub bullet_x:f32,
+    //2
+    pub bullet2_x:f32,
+    pub bullet2_y:f32,
+    //3
+    pub bullet3_x:f32,
+    pub bullet3_y:f32,
+
+    // keeps track of whether 3 bullet max is met
+    pub three_bullets:bool,
+
+    pub score: usize,
+
+    pub bullet_index : usize,
+
+
+
     // y pos of ship
     pub cur_y:f32,
+
+    // # of bullets onscreen
+    pub bullet_count:usize,
+
     // x pos of ship
     pub cur_x:f32,
     pub target_x:f32,
     pub target_y:f32,
     // bullet speed
     pub bullet_speed:f32
+    // text for score
 
 }
 impl GameState {
@@ -57,6 +79,8 @@ pub fn init_game_state() -> GameState {
     GameState {
         // Screen number: 0 = Title, 1 = Block Game, 2 = Block Setup, 3 = Black GO, 4 = Space Game, 5 = Space Setup, 6 = Space GO
         screen : 0,
+        // score
+        score: 0,
         //level
         level : 1,
         // is the game in progress? no -> title screen
@@ -83,10 +107,22 @@ pub fn init_game_state() -> GameState {
         start : true,
         // shooting a bullet
         bullet_moving : false,
+        //
+        bullet_index : 0,
+        //
+        three_bullets : false,
         // bullet cords
         bullet_y : 0.0,
         // bullet cords
         bullet_x: 0.0,
+        //2
+        bullet2_y : 0.0,
+        bullet2_x: 0.0,
+        // 3
+        bullet3_x : 0.0,
+        bullet3_y: 0.0,
+
+        bullet_count :  0,
         // ship x
         cur_y : 0.0,
         // ship y cords
@@ -94,6 +130,6 @@ pub fn init_game_state() -> GameState {
         target_x: 500.0,
         target_y: WINDOW_HEIGHT-SPRITE_SIZE,
         // bullet speed
-        bullet_speed : 5.0
+        bullet_speed : 45.0
     }
 }
