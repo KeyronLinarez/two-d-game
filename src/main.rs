@@ -550,6 +550,7 @@ let sprite_bind_group_layout =
                             sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
 
 
+
                         }
 
                         if gs.bullet_moving{
@@ -586,6 +587,45 @@ let sprite_bind_group_layout =
                                 gs.bullet_moving = false;
                             }
                         }
+
+
+=======
+                        }
+
+                        if gs.bullet_moving{
+
+                            println!("SHOOTING");
+                            // USING WAITING TO CHECK IF BULLET SHOT
+                            if gs.bullet_y < WINDOW_HEIGHT {
+                            //cur_y = cur_y + bullet_speed;
+                            gs.bullet_y += gs.bullet_speed;
+                            println!("{}", gs.cur_y);
+                            sprites[2].to_region = [gs.bullet_x, gs.bullet_y, SPRITE_SIZE, SPRITE_SIZE];
+    
+                            }
+                            else{
+                                gs.bullet_moving = false;
+                            }
+
+                        }
+                    
+
+                        // else{
+                        // // Bullet SPrite - initially invisible
+                        // sprites[2].to_region = [
+                        //     cur_x, 
+                        //     cur_y, 
+                        //     0.0, 
+                        //     0.0];
+                        // sprites[2].from_region = [
+                        //     0.5, 
+                        //     0.9,
+                        //     0.25,
+                        //     0.1];
+                        // }
+
+
+
 
 
                         }
