@@ -523,7 +523,8 @@ let sprite_bind_group_layout =
 
             } else if gs.screen == 5 {
                         // space game
-                        
+                        buffer.set_text(&mut font_system, "", Attrs::new().family(Family::Serif), Shaping::Advanced);
+
                         gs.screen = 5;
                         let  mut hits: f32 = 0.0;
 
