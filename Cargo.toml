@@ -10,7 +10,8 @@ name = "hello-triangle"
 path = "src/main.rs"
 [dependencies]
 # Our graphics API
-wgpu = "0.17"
+wgpu = "0.17.1"
+glyphon = {git="https://github.com/grovesNL/glyphon.git",rev="1de354c05da2414afdbd5ff0fe2b4104dcf7d414"}
 # Opening windows in a cross-platform way
 winit = "0.28"
 # Organized logging output, WGPU uses this for errors and info

@@ -1,3 +1,4 @@
+use crate::WINDOW_WIDTH;
 pub struct GameState{
     // Screen number: 0 = Title, 1 = Block Game, 2 = Black GO, 3 = Space Game, 4 = Space GO
     pub screen: usize,
@@ -22,7 +23,21 @@ pub struct GameState{
     // how many sprite blocks wide do we drop next
     pub drop_sprite_blocks: usize,
     // speed of blocks moving 
-    pub speed:usize
+    pub speed:usize,
+    // space game start
+    pub start:bool,
+    // checks bullet state
+    pub bullet_moving:bool,
+    // y pos of bullet
+    pub bullet_y:f32,
+    // x pos of bullet
+    pub bullet_x:f32,
+    // y pos of ship
+    pub cur_y:f32,
+    // x pos of ship
+    pub cur_x:f32,
+    // bullet speed
+    pub bullet_speed:f32
 }
 impl GameState {
 // add all necessary functions
@@ -59,5 +74,19 @@ pub fn init_game_state() -> GameState {
         drop_sprite_blocks : 5,
         // speed of blocks moving
         speed: 4,
+        // start game - initialize space game vars
+        start : true,
+        // shooting a bullet
+        bullet_moving : false,
+        // bullet cords
+        bullet_y : 0.0,
+        // bullet cords
+        bullet_x: 0.0,
+        // ship x
+        cur_y : 0.0,
+        // ship y cords
+        cur_x: WINDOW_WIDTH/2.0,
+        // bullet speed
+        bullet_speed : 5.0
     }
 }
