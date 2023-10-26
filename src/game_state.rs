@@ -1,4 +1,6 @@
-use crate::WINDOW_WIDTH;
+use crate::{WINDOW_WIDTH, WINDOW_HEIGHT, SPRITE_SIZE};
+
+
 pub struct GameState{
     // Screen number: 0 = Title, 1 = Block Game, 2 = Black GO, 3 = Space Game, 4 = Space GO
     pub screen: usize,
@@ -36,8 +38,11 @@ pub struct GameState{
     pub cur_y:f32,
     // x pos of ship
     pub cur_x:f32,
+    pub target_x:f32,
+    pub target_y:f32,
     // bullet speed
     pub bullet_speed:f32
+
 }
 impl GameState {
 // add all necessary functions
@@ -86,6 +91,8 @@ pub fn init_game_state() -> GameState {
         cur_y : 0.0,
         // ship y cords
         cur_x: WINDOW_WIDTH/2.0,
+        target_x: 500.0,
+        target_y: WINDOW_HEIGHT-SPRITE_SIZE,
         // bullet speed
         bullet_speed : 5.0
     }
