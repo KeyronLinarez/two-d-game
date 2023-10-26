@@ -560,7 +560,22 @@ let sprite_bind_group_layout =
                             0.0,
                             0.25,
                             0.1];
-                                    
+                                let mut moven = gs.speed as f32;
+                            if gs.direction == true{
+                                moven = gs.speed as f32 * (-1.0);
+                            }
+                           
+                                if sprites[0].to_region[1] == WINDOW_HEIGHT - SPRITE_SIZE{
+                                 gs.target_x = sprites[0].to_region[0];
+                                    if gs.target_x >= 960.0 - moven{
+                                        gs.direction = true;
+                                    }else if gs.target_x < 0.0 + moven{
+                                        gs.direction = false;
+                                    }
+                                    gs.target_x = gs.target_x + moven;
+                                    sprites[0].to_region = [gs.target_x, WINDOW_HEIGHT - SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE];
+                                                   
+                            }     
                         // ship sprite VVV
                         sprites[1].to_region = [
                             gs.cur_x, 
