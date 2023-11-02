@@ -6,6 +6,7 @@ pub struct GameState{
     pub screen: usize,
     // level
     pub level: usize,
+    pub targetl: f32,
     // is the game in progress? no -> title screen
     pub running: bool,
     // is there a block bouncing side to side at top
@@ -79,6 +80,7 @@ pub fn init_game_state() -> GameState {
     GameState {
         // Screen number: 0 = Title, 1 = Block Game, 2 = Block Setup, 3 = Black GO, 4 = Space Game, 5 = Space Setup, 6 = Space GO
         screen : 0,
+        targetl : 1.0,
         // score
         score: 0,
         //level
