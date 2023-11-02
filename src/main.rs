@@ -536,13 +536,21 @@ let sprite_bind_group_layout =
                         let sprites_num = sprites.len();
                         ////println!("Number of elements in the Vec: {}", sprites_num);
                         // space game
-                        let text_1 = "Target practice! Hit the target for points! \nYour score: ";
-                        let text = text_1.to_owned() + &gs.score.to_string();
+                        let text_1 = "Target practice! Hit the target for points! \nYour score: " ;
+                        let text = text_1.to_owned() + &gs.score.to_string() + "\nLevel:" + &gs.level.to_string();
                         buffer.set_text(&mut font_system, &text, Attrs::new().family(Family::Serif), Shaping::Advanced);
 
                         gs.screen = 5;
                         let mut hits: f32 = 0.0;
-
+                       
+                        if (gs.score == 12 ){
+                            hits = hits + 1.0;
+                            gs.level = gs.level + 1;
+                            gs.speed = gs.speed + (5);
+                            
+                            gs.score = 0;
+                            
+                        }
 
                         if gs.start{
                         // target sprite
